@@ -4,7 +4,7 @@
 
 ## Открыть приложение
 
-После успешной публикации GitHub Pages: https://maplediz.github.io/cosmic-oracle/
+После публикации GitHub Pages: https://maplediz.github.io/cosmic-oracle/
 
 ## Запуск локально
 
@@ -20,3 +20,5 @@
 - адаптация под мобильные устройства и reduced motion.
 
 Прогнозы носят развлекательный характер.
+
+<!-- GitHub Pages deployment trigger -->
