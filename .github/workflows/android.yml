@@ -70,3 +70,4 @@ jobs:
           if-no-files-found: error
 
 # APK upload uses a wildcard because Capacitor/Gradle may name the release APK differently.
+# Trigger rebuild after fixing APK artifact path.
