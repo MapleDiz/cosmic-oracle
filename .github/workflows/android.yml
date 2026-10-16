@@ -68,3 +68,5 @@ jobs:
           name: cosmic-oracle-apk
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
+
+# Rebuilt with npm cache disabled to avoid lockfile requirement.
