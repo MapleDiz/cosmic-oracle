@@ -1,0 +1,8 @@
+{
+  "appId": "com.maplediz.cosmicoracle",
+  "appName": "Cosmic Oracle",
+  "webDir": ".",
+  "server": {
+    "androidScheme": "https"
+  }
+}
