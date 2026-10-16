@@ -1,0 +1,67 @@
+name: Build Cosmic Oracle Android
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'style.css'
+      - 'script.js'
+      - 'assets/**'
+      - 'package.json'
+      - 'capacitor.config.json'
+      - '.github/workflows/android.yml'
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Prepare web assets
+        run: |
+          rm -rf www
+          mkdir -p www/assets
+          cp index.html style.css script.js www/
+          cp -r assets/. www/assets/
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Build Android App Bundle
+        working-directory: android
+        run: ./gradlew bundleRelease
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: cosmic-oracle-aab
+          path: android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: cosmic-oracle-apk
+          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          if-no-files-found: warn
