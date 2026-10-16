@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#070816">
+    <meta name="description" content="Cosmic Oracle — персональный астрологический прогноз">
+    <title>Cosmic Oracle — Узнай свою судьбу</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="cosmos" aria-hidden="true">
+        <div class="cosmic-art" id="cosmicArt">
+            <img src="assets/cosmic-oracle-bg.png" alt="">
+            <div class="cosmic-parallax-nebula"></div>
+            <div class="cosmic-depth-glow"></div>
+            <div class="cosmic-art-vignette"></div>
+        </div>
+        <div class="stars stars-small"></div>
+        <div class="stars stars-medium"></div>
+        <div class="stars stars-large"></div>
+    </div>
+    <main class="app-shell">
+        <header class="topbar">
+            <a class="brand" href="#" aria-label="Cosmic Oracle — главная">
+                <span class="brand-mark">✦</span>
+                <span class="brand-copy"><strong>COSMIC</strong><small>ORACLE</small></span>
+            </a>
+            <div class="system-status"><span class="status-dot"></span> ASTRAL SYSTEM ONLINE</div>
+        </header>
+
+        <section class="hero" id="hero">
+            <p class="eyebrow">✦ PERSONAL STAR MAP ✦</p>
+            <h1>Загляни за<br>грань <span>звёзд</span></h1>
+            <p class="hero-copy">Твоя дата рождения уже оставила след во Вселенной. Расшифруй его и узнай,<br class="desktop-break"> что приготовили тебе звёзды.</p>
+        </section>
+
+        <aside class="ad-slot" aria-label="Рекламный блок"><span>SPONSORED LINK</span>
+            <!-- Google AdSense / РСЯ: разместите рекламный код здесь -->
+        </aside>
+
+        <section class="form-card glass-card tilt-card" id="entryScreen">
+            <div class="step-counter">01 / 03</div>
+            <h2>Создай свою<br><span>звёздную карту</span></h2>
+            <form id="profileForm" novalidate>
+                <label for="userName">ТВОЁ ИМЯ</label>
+                <input id="userName" name="name" type="text" autocomplete="given-name" maxlength="40" placeholder="Как тебя зовут?" required>
+                <label for="birthDate">ДАТА РОЖДЕНИЯ</label>
+                <input id="birthDate" name="birthDate" type="date" required>
+                <label>ТВОЙ ЗНАК ЗОДИАКА</label>
+                <div class="zodiac-grid" id="zodiacGrid" role="group" aria-label="Выбери знак зодиака">
+                    <button type="button" class="zodiac-option" data-zodiac="aries"><span>♈</span><small>Овен</small></button>
+                    <button type="button" class="zodiac-option" data-zodiac="taurus"><span>♉</span><small>Телец</small></button>
+                    <button type="button" class="zodiac-option" data-zodiac="gemini"><span>♊</span><small>Близнецы</small></button>
+                    <button type="button" class="zodiac-option" data-zodiac="cancer"><span>♋</span><small>Рак</small></button>
+                    <button type="button" class="zodiac-option" data-zodiac="leo"><span>♌</span><small>Лев</small></button>
+                    <button type="button" class="zodiac-option" data-zodiac="virgo"><span>♍</span><small>Дева</small></button>
+                    <button type="button" class="zodiac-option" data-zodiac="libra"><span>♎</span><small>Весы</small></button>
+                    <button type="button" class="zodiac-option" data-zodiac="scorpio"><span>♏</span><small>Скорпион</small></button>
+                    <button type="button" class="zodiac-option" data-zodiac="sagittarius"><span>♐</span><small>Стрелец</small></button>
+                    <button type="button" class="zodiac-option" data-zodiac="capricorn"><span>♑</span><small>Козерог</small></button>
+                    <button type="button" class="zodiac-option" data-zodiac="aquarius"><span>♒</span><small>Водолей</small></button>
+                    <button type="button" class="zodiac-option" data-zodiac="pisces"><span>♓</span><small>Рыбы</small></button>
+                </div>
+                <button class="primary-button" type="submit"><span>Узнать судьбу</span><span aria-hidden="true">↗</span></button>
+                <p class="privacy-note">✦ Данные сохраняются только в этом браузере</p>
+            </form>
+        </section>
+
+        <aside class="ad-slot ad-slot-bottom" aria-label="Рекламный блок"><span>SPONSORED LINK</span>
+            <!-- Google AdSense / РСЯ: разместите рекламный код здесь -->
+        </aside>
+
+        <section class="result-screen" id="resultScreen" hidden>
+            <div class="result-heading"><p class="eyebrow">✦ YOUR COSMIC FORECAST ✦</p><h2>Звёзды приготовили<br><span>для тебя послание</span></h2></div>
+            <div class="profile-summary glass-card"><span id="resultZodiacSymbol" class="profile-zodiac">✦</span><div><strong id="resultName">Путник</strong><small id="resultBirthInfo">Твоя звёздная карта</small></div><button id="editProfile" type="button" class="text-button">Изменить</button></div>
+            <div class="forecast-tabs" role="tablist" aria-label="Период прогноза">
+                <button class="forecast-tab active" type="button" data-period="day" role="tab" aria-selected="true">На день</button>
+                <button class="forecast-tab" type="button" data-period="week" role="tab" aria-selected="false">На неделю</button>
+                <button class="forecast-tab" type="button" data-period="year" role="tab" aria-selected="false">На год</button>
+            </div>
+            <article class="forecast-card glass-card tilt-card" id="forecastCard">
+                <div class="forecast-topline"><span id="forecastPeriodLabel">ПОСЛАНИЕ ДНЯ</span><span class="forecast-stars">✦ ✧ ✦</span></div>
+                <div class="forecast-symbol" id="forecastSymbol">☼</div>
+                <h3 id="forecastTitle">Твой момент начинается сейчас</h3>
+                <p id="forecastText"></p>
+                <div class="forecast-meta"><div><small>ЭНЕРГИЯ</small><strong id="energyValue">Высокая</strong></div><div><small>СЧАСТЛИВОЕ ЧИСЛО</small><strong id="luckyNumber">7</strong></div><div><small>ЦВЕТ ДНЯ</small><strong id="luckyColor">Аметист</strong></div></div>
+            </article>
+            <div class="insight-grid"><article class="insight-card glass-card"><span class="insight-icon">✧</span><small>КЛЮЧЕВОЕ СЛОВО</small><strong id="keywordValue">Возможность</strong></article><article class="insight-card glass-card"><span class="insight-icon">☾</span><small>СОВЕТ ВСЕЛЕННОЙ</small><strong id="adviceValue">Доверься себе</strong></article></div>
+            <button type="button" class="secondary-button" id="newForecast">Обновить карту <span>↻</span></button>
+        </section>
+        <footer class="site-footer"><span>✦ COSMIC ORACLE</span><p>Звёзды подсказывают — выбор всегда за тобой.</p></footer>
+    </main>
+
+    <div class="scanner-overlay" id="scannerOverlay" aria-hidden="true"><div class="scanner-ring"><span>✦</span></div><p>СОЕДИНЕНИЕ СО ЗВЁЗДАМИ</p><div class="scanner-track"><span></span></div><small>Расшифровываем твою карту...</small></div>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="script.js"></script>
+</body>
+</html>
