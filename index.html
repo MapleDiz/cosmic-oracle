@@ -91,6 +91,55 @@
             <section class="domain-section" aria-label="Прогноз по сферам жизни"><h3>Сферы внимания</h3><div class="domain-grid"><article class="domain-card glass-card"><span>♡</span><small>ОТНОШЕНИЯ</small><p id="loveValue"></p></article><article class="domain-card glass-card"><span>✦</span><small>РАБОТА И ЦЕЛИ</small><p id="workValue"></p></article><article class="domain-card glass-card"><span>◈</span><small>ДЕНЬГИ И РЕСУРСЫ</small><p id="moneyValue"></p></article><article class="domain-card glass-card"><span>☾</span><small>ВНУТРЕННИЙ БАЛАНС</small><p id="wellbeingValue"></p></article></div></section>
             <section class="transit-panel glass-card" aria-live="polite"><div class="transit-heading"><small>НЕБЕСНЫЙ ФОН</small><span id="transitDate"></span></div><p id="transitSummary"></p><div class="planet-chips" id="planetChips"></div><p class="calculation-note">Расчёт выполнен по дате рождения и солнечному знаку. Без точного времени и места рождения это не полная натальная карта.</p></section>
             <p class="astro-disclaimer">Астрология — символическая интерпретация, а не научно подтверждённый способ предсказывать события. Используй прогноз как повод для размышления, а не как замену собственным решениям.</p>
+            <button type="button" class="secondary-button compatibility-toggle" id="openCompatibility" aria-expanded="false" aria-controls="compatibilitySection">Проверить совместимость пары <span>♡</span></button>
+            <section class="compatibility-section glass-card" id="compatibilitySection" hidden>
+                <div class="compatibility-heading"><p class="eyebrow">✦ TWO STARS · ONE STORY ✦</p><h3>Совместимость <span>вашей пары</span></h3><p>Сравни имена и даты рождения — получи символический разбор сильных сторон и возможных точек притирки.</p></div>
+                <form id="compatibilityForm">
+                    <div class="compatibility-pair-grid">
+                        <fieldset class="compat-person">
+                            <legend>ПЕРВЫЙ ЧЕЛОВЕК</legend>
+                            <label for="compatNameA">Имя</label>
+                            <input id="compatNameA" name="nameA" type="text" maxlength="40" placeholder="Например, Анна" required>
+                            <label for="compatGenderA">Пол (необязательно)</label>
+                            <select id="compatGenderA" name="genderA"><option value="unspecified">Не указывать</option><option value="female">Женщина</option><option value="male">Мужчина</option></select>
+                            <label for="compatBirthA">Дата рождения</label>
+                            <input id="compatBirthA" name="birthA" type="date" required>
+                        </fieldset>
+                        <fieldset class="compat-person">
+                            <legend>ВТОРОЙ ЧЕЛОВЕК</legend>
+                            <label for="compatNameB">Имя</label>
+                            <input id="compatNameB" name="nameB" type="text" maxlength="40" placeholder="Например, Александр" required>
+                            <label for="compatGenderB">Пол (необязательно)</label>
+                            <select id="compatGenderB" name="genderB"><option value="unspecified">Не указывать</option><option value="female">Женщина</option><option value="male">Мужчина</option></select>
+                            <label for="compatBirthB">Дата рождения</label>
+                            <input id="compatBirthB" name="birthB" type="date" required>
+                        </fieldset>
+                    </div>
+                    <p class="compatibility-form-note">Пол нужен только для удобства описания пары и не влияет на расчёт. Можно проверить любую пару.</p>
+                    <button class="primary-button" type="submit"><span>Рассчитать совместимость</span><span aria-hidden="true">♡</span></button>
+                </form>
+                <div id="compatibilityResult" class="compatibility-result" hidden aria-live="polite">
+                    <div class="compatibility-score-head"><div><small>СИМВОЛИЧЕСКИЙ ИНДЕКС ПАРЫ</small><h4 id="compatOverallScore">78%</h4></div><div class="compat-sign-pair" id="compatSignPair"></div></div>
+                    <h4 id="compatTitle" class="compat-result-title">Потенциал пары</h4>
+                    <p id="compatOverview" class="compat-overview"></p>
+                    <div class="compatibility-scores">
+                        <div><span>Имена</span><strong id="compatNamesScore"></strong></div>
+                        <div><span>Знаки зодиака</span><strong id="compatZodiacScore"></strong></div>
+                        <div><span>Любовь</span><strong id="compatLoveScore"></strong></div>
+                        <div><span>Семейная жизнь</span><strong id="compatFamilyScore"></strong></div>
+                        <div><span>Работа вместе</span><strong id="compatWorkScore"></strong></div>
+                        <div><span>Совместный быт</span><strong id="compatHomeScore"></strong></div>
+                    </div>
+                    <div class="compatibility-reading-grid">
+                        <article><small>ЧТО ОБЪЕДИНЯЕТ</small><p id="compatStrengths"></p></article>
+                        <article><small>ГДЕ МОЖЕТ ПОТРЕБОВАТЬСЯ ДИАЛОГ</small><p id="compatChallenges"></p></article>
+                        <article><small>ВКЛАД ПЕРВОГО ЧЕЛОВЕКА</small><p id="compatContributionA"></p></article>
+                        <article><small>ВКЛАД ВТОРОГО ЧЕЛОВЕКА</small><p id="compatContributionB"></p></article>
+                    </div>
+                    <p class="compat-method-note" id="compatMethodNote">Индекс — условная оценка внутри развлекательной методики, а не вероятность счастливых отношений.</p>
+                    <button type="button" class="secondary-button" id="compareAnother">Сравнить другую пару <span>↻</span></button>
+                </div>
+            </section>
             <button type="button" class="secondary-button" id="newForecast">Другой вариант <span>↻</span></button>
         </section>
         <footer class="site-footer"><span>✦ COSMIC ORACLE</span><p>Звёзды подсказывают — выбор всегда за тобой.</p></footer>
