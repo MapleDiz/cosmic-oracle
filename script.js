@@ -324,7 +324,7 @@ function render(period) {
 
   $("transitDate").textContent = formatDate(date);
   const bestAspects = aspectsToNatalSun(sky).slice(0,2);
-  let skySummary = "Луна в "+sky.Moon.signName+", "+sky.Moon.phaseName+". В солнечной астрологической традиции это задаёт символический эмоциональный фон; трактовка не является проверяемым прогнозом событий.";
+  let skySummary = (sky.calculated ? "Астрономический расчёт выполнен локально. " : "Резервная оценка: библиотека астрономических расчётов недоступна. ") + "Луна в "+sky.Moon.signName+", "+sky.Moon.phaseName+". В солнечной астрологической традиции это задаёт символический эмоциональный фон; трактовка не является проверяемым прогнозом событий.";
   if (bestAspects.length) {
     skySummary += " Ближайший аспект к солнечной точке рождения: "+bestAspects.map((a)=>planetNames[a.body]+" — "+a.name+" (орб "+a.orb.toFixed(1)+"°)").join("; ")+".";
   } else {
