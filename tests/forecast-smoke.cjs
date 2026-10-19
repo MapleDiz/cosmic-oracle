@@ -96,5 +96,28 @@ zodiacButtons.find((el) => el.dataset.zodiac === "aries").listeners.click();
   get("newForecast").listeners.click();
   const after = get("forecastText").textContent;
   assert.notEqual(after, before, "alternate forecast button must actually change the reading");
-  console.log("PASS: ephemeris loaded; four periods render distinct forecast text; four life domains render; alternate variant changes the reading.");
+
+  get("openCompatibility").listeners.click();
+  assert.equal(get("compatibilitySection").hidden,false,"compatibility section opens");
+  get("compatNameA").value = "Анна";
+  get("compatGenderA").value = "female";
+  get("compatBirthA").value = "1992-03-25";
+  get("compatNameB").value = "Александр";
+  get("compatGenderB").value = "male";
+  get("compatBirthB").value = "1990-09-07";
+  get("compatibilityForm").listeners.submit({preventDefault() {}});
+  assert.equal(get("compatibilityResult").hidden,false,"compatibility output appears after submit");
+  const scoreA = get("compatOverallScore").textContent;
+  const dims = ["compatNamesScore","compatZodiacScore","compatLoveScore","compatFamilyScore","compatWorkScore","compatHomeScore"];
+  for (const id of dims) assert.match(get(id).textContent,/^\d+\/100$/,"compatibility score renders for "+id);
+  for (const id of ["compatNamesText","compatZodiacText","compatLoveText","compatFamilyText","compatWorkText","compatHomeText","compatStrengths","compatChallenges","compatContributionA","compatContributionB"]) {
+    assert.ok(get(id).textContent.length > 20,"compatibility interpretation renders for "+id);
+  }
+  const originalSummary = get("compatSignPair").textContent;
+  get("compatNameB").value = "Мария";
+  get("compatBirthB").value = "1988-02-12";
+  get("compatibilityForm").listeners.submit({preventDefault() {}});
+  assert.notEqual(get("compatSignPair").textContent,originalSummary,"changing a partner updates the compatibility result");
+  assert.ok(get("compatOverallScore").textContent.endsWith("/100"),"overall compatibility index is labelled as a symbolic score");
+  console.log("PASS: ephemeris loads; day/week/month/year forecasts differ; alternative forecast changes; name/zodiac compatibility and all four life-area readings render and update.");
 })().catch((error) => { console.error(error); process.exitCode = 1; });
