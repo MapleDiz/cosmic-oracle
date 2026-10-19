@@ -31,6 +31,9 @@ jobs:
       - name: Check JavaScript syntax
         run: node --check script.js
 
+      - name: Forecast smoke test
+        run: node tests/forecast-smoke.cjs
+
       - name: Prepare web assets
         run: |
           rm -rf www
