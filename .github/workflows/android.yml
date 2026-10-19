@@ -54,18 +54,57 @@ jobs:
           distribution: temurin
           java-version: '21'
 
+      - name: Prepare optional release signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$ANDROID_KEYSTORE_BASE64" ]; then
+            printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/cosmic-oracle-release.jks"
+            echo "ANDROID_SIGNING_ENABLED=true" >> "$GITHUB_ENV"
+            echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/cosmic-oracle-release.jks" >> "$GITHUB_ENV"
+            echo "Release signing key is available."
+          else
+            echo "ANDROID_SIGNING_ENABLED=false" >> "$GITHUB_ENV"
+            echo "No signing key configured yet; APK will be unsigned."
+          fi
+
+      # RuStore's AAB upload needs an additional signature setup in its console.
+      # For now, keep the AAB as an unsigned build artifact and use the signed APK for the first test/release.
       - name: Build Android App Bundle
         working-directory: android
         run: ./gradlew bundleRelease
 
       - name: Build APK
         working-directory: android
-        run: ./gradlew assembleRelease
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ "$ANDROID_SIGNING_ENABLED" = "true" ]; then
+            ./gradlew assembleRelease \
+              "-Pandroid.injected.signing.store.file=$ANDROID_KEYSTORE_PATH" \
+              "-Pandroid.injected.signing.store.password=$ANDROID_KEYSTORE_PASSWORD" \
+              "-Pandroid.injected.signing.key.alias=$ANDROID_KEY_ALIAS" \
+              "-Pandroid.injected.signing.key.password=$ANDROID_KEY_PASSWORD"
+          else
+            ./gradlew assembleRelease
+          fi
 
-      - name: Upload AAB
+      - name: Verify signed APK
+        if: env.ANDROID_SIGNING_ENABLED == 'true'
+        run: |
+          APK_PATH="android/app/build/outputs/apk/release/app-release.apk"
+          test -f "$APK_PATH"
+          SDK_ROOT="${ANDROID_HOME:-${ANDROID_SDK_ROOT:-}}"
+          APKSIGNER="$(find "$SDK_ROOT/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
+          test -n "$APKSIGNER"
+          "$APKSIGNER" verify --verbose --print-certs "$APK_PATH"
+
+      - name: Upload AAB (unsigned - for later RuStore signature setup)
         uses: actions/upload-artifact@v4
         with:
-          name: cosmic-oracle-aab
+          name: cosmic-oracle-aab-unsigned
           path: android/app/build/outputs/bundle/release/app-release.aab
           if-no-files-found: error
 
