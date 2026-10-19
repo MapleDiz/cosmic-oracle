@@ -578,7 +578,7 @@ function renderCompatibility(event) {
   const style = elementalStyle(signA.element,signB.element);
 
   $("compatOverallScore").textContent = overall+"/100";
-  $("compatSignPair").textContent = nameA+" · "+signA.symbol+" "+signA.name+"  +  "+nameB+" · "+signB.symbol+" "+signB.name;
+  $("compatSignPair").textContent = nameA+" ("+genderLabel($("compatGenderA").value)+") · "+signA.symbol+" "+signA.name+"  +  "+nameB+" ("+genderLabel($("compatGenderB").value)+") · "+signB.symbol+" "+signB.name;
   $("compatTitle").textContent = overall>=83?"Много точек соприкосновения":overall>=72?"Есть потенциал для гармоничного союза":"Союзу особенно помогут договорённости";
   $("compatOverview").textContent = "Символический индекс пары "+nameA+" и "+nameB+" — "+overall+" из 100. Сочетание стихий — "+signA.element.toLocaleLowerCase("ru-RU")+" и "+signB.element.toLocaleLowerCase("ru-RU")+". Это не рейтинг людей и не ответ, кому следует быть вместе: результат показывает темы, которые можно обсудить и сравнить с реальной жизнью.";
   $("compatNamesScore").textContent = nameScore+"/100";
@@ -601,7 +601,7 @@ function renderCompatibility(event) {
     : "Следите за тем, чтобы похожие привычки не превращались в упрямство, а разные — в ожидание, что партнёр должен догадаться сам. Договорённости лучше произносить вслух.";
   $("compatContributionA").textContent = nameA+": число имени "+numberA+" связывают с темой "+nameNumberMeaning[numberA]+". В паре это можно выразить через конкретные поступки и открытый разговор.";
   $("compatContributionB").textContent = nameB+": число имени "+numberB+" связывают с темой "+nameNumberMeaning[numberB]+". Сильная сторона лучше проявляется, когда второй человек её замечает и уважает.";
-  $("compatMethodNote").textContent = "Как рассчитано: значения букв кириллического имени транслитерируются в латиницу и суммируются по циклу Пифагора 1–9; солнечные знаки сравниваются по традиционной схеме стихий и расстоянию между знаками. Баллы — условный игровой индекс, не вероятность удачи или расставания. Пол человека не меняет оценку. Реальная совместимость зависит от общения, безопасности, уважения, общих ценностей и поведения.";
+  $("compatMethodNote").textContent = "Как рассчитано: значения букв кириллического имени транслитерируются в латиницу и суммируются по циклу Пифагора 1–9; солнечные знаки сравниваются по традиционной схеме стихий и расстоянию между знаками. Баллы — условный игровой индекс, не вероятность удачи или расставания. Пол человека не меняет оценку. Чтобы сравнить, кто из нескольких возможных партнёров подходит по этой символической схеме больше, нажми «Сравнить другую пару» и введи другого человека. Реальная совместимость зависит от общения, безопасности, уважения, общих ценностей и поведения.";
   $("compatibilityResult").hidden = false;
 }
 function elementANameFallback(element) {
