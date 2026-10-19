@@ -690,7 +690,7 @@ function appendSynastryContext(baseText,aspects,domain,nameA,nameB) {
   return baseText+" В символической синастрии заметны: "+relevant.map((aspect)=>formatSynastryAspect(aspect,nameA,nameB)).join("; ")+". Рассматривай это как тему для размышления, а не гарантию поведения.";
 }
 
-function renderCompatibility(event) {
+async function renderCompatibility(event) {
   if (event) event.preventDefault();
   const nameA = $("compatNameA").value.trim();
   const nameB = $("compatNameB").value.trim();
