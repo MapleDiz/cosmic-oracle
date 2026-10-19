@@ -258,7 +258,7 @@ function aspectsToNatalSun(sky) {
     }
     if (nearest) found.push({body,...nearest});
   }
-  return found.sort((a,b) => (a.orb/a.orb)-(b.orb/b.orb) || a.orb-b.orb);
+  return found.sort((a,b) => a.orb-b.orb);
 }
 function solarHouse(natalSignKey, transitSignIndex) {
   return ((transitSignIndex-signIndex(natalSignKey)+12)%12)+1;
