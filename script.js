@@ -820,7 +820,7 @@ function init() {
   $("newForecast").addEventListener("click",()=>{variations[active]=(variations[active]+1)%97;render(active);});
   $("openCompatibility").addEventListener("click",openCompatibility);
   $("compatibilityForm").addEventListener("submit",renderCompatibility);
-  $("compareAnother").addEventListener("click",()=>{resetCompatibilityResult();$("compatNameB").value="";$("compatBirthB").value="";$("compatGenderB").value="unspecified";$("compatNameB").focus();});
+  $("compareAnother").addEventListener("click",()=>{resetCompatibilityResult();$("compatNameB").value="";$("compatBirthB").value="";$("compatGenderB").value="unspecified";$("compatTimeA").value="";$("compatTimeB").value="";$("compatPlaceA").value="";$("compatPlaceB").value="";$("compatNameB").focus();});
   $("compatBirthA").max=new Date().toISOString().slice(0,10);
   $("compatBirthB").max=new Date().toISOString().slice(0,10);
   setupParallax(); setupTilt();
