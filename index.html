@@ -104,10 +104,6 @@
                             <select id="compatGenderA" name="genderA"><option value="unspecified">Не указывать</option><option value="female">Женщина</option><option value="male">Мужчина</option></select>
                             <label for="compatBirthA">Дата рождения</label>
                             <input id="compatBirthA" name="birthA" type="date" required>
-                            <label for="compatTimeA">Время рождения (для натальной карты)</label>
-                            <input id="compatTimeA" name="timeA" type="time">
-                            <label for="compatPlaceA">Город и страна рождения</label>
-                            <input id="compatPlaceA" name="placeA" type="text" maxlength="100" placeholder="Например, Казань, Россия" autocomplete="off">
                         </fieldset>
                         <fieldset class="compat-person">
                             <legend>ВТОРОЙ ЧЕЛОВЕК</legend>
@@ -117,13 +113,8 @@
                             <select id="compatGenderB" name="genderB"><option value="unspecified">Не указывать</option><option value="female">Женщина</option><option value="male">Мужчина</option></select>
                             <label for="compatBirthB">Дата рождения</label>
                             <input id="compatBirthB" name="birthB" type="date" required>
-                            <label for="compatTimeB">Время рождения (для натальной карты)</label>
-                            <input id="compatTimeB" name="timeB" type="time">
-                            <label for="compatPlaceB">Город и страна рождения</label>
-                            <input id="compatPlaceB" name="placeB" type="text" maxlength="100" placeholder="Например, Самара, Россия" autocomplete="off">
                         </fieldset>
                     </div>
-                    <p class="compatibility-form-note">Пол нужен только для удобства описания пары и не влияет на расчёт. Можно проверить любую пару. Для расширенного анализа заполните время и город рождения у обоих людей. При настроенном ключе названия городов отправляются геокодеру Geoapify для поиска координат и часового пояса; имена, даты и время рождения остаются в браузере. В расширенном блоке показываются ключевые положения карты и основные аспекты.</p>
                     <button class="primary-button" type="submit"><span>Рассчитать совместимость</span><span aria-hidden="true">♡</span></button>
                 </form>
                 <div id="compatibilityResult" class="compatibility-result" hidden aria-live="polite">
@@ -144,7 +135,6 @@
                         <article><small>ВКЛАД ПЕРВОГО ЧЕЛОВЕКА</small><p id="compatContributionA"></p></article>
                         <article><small>ВКЛАД ВТОРОГО ЧЕЛОВЕКА</small><p id="compatContributionB"></p></article>
                     </div>
-                    <section class="compat-natal-section" id="compatNatalSection" hidden>
                         <h4>Натальные карты пары</h4>
                         <p class="compat-method-note">Расчёт использует дату, местное время, часовой пояс и координаты города рождения. Положения планет вычисляются Astronomy Engine; астрологические значения остаются символической интерпретацией.</p>
                         <div class="compat-natal-grid">
@@ -167,7 +157,6 @@
 
     <div class="scanner-overlay" id="scannerOverlay" aria-hidden="true"><div class="scanner-ring"><span>✦</span></div><p>СОЕДИНЕНИЕ СО ЗВЁЗДАМИ</p><div class="scanner-track"><span></span></div><small>Расшифровываем твою карту...</small></div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
-    <script src="assets/config.js"></script>
     <script src="assets/astronomy.browser.min.js"></script>
     <script src="script.js"></script>
 </body>
