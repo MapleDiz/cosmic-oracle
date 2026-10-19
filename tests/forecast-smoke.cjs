@@ -49,7 +49,8 @@ const document = {
 };
 const storage = new Map();
 const context = {
-  console, document, Date, Math, JSON, Object, String, Number, Promise,
+  console, document, Date, Math, JSON, Object, String, Number, Promise, URL,
+  COSMIC_CONFIG: { geoapifyApiKey: "test-api-key" },
   localStorage: { getItem: (k) => storage.has(k) ? storage.get(k) : null, setItem: (k,v) => storage.set(k,v) },
   matchMedia: () => ({ matches: false }),
   setTimeout: (fn) => { fn(); return 1; },
@@ -134,5 +135,28 @@ zodiacButtons.find((el) => el.dataset.zodiac === "aries").listeners.click();
   get("compatibilityForm").listeners.submit({preventDefault() {}});
   assert.deepEqual(scoreIds.map((id) => get(id).textContent),scoresBeforeSwap,"pair compatibility scores are symmetric when participant order is swapped");
   assert.ok(get("compatSignPair").textContent.includes("женщина"),"participant gender is shown as a label");
-  console.log("PASS: ephemeris loads; all forecast periods vary; alternative readings change; name and zodiac matching renders four domain interpretations; changing the partner updates results; compatibility scores are symmetric.");
+
+  const geoRequests = [];
+  context.fetch = async (url) => {
+    const city = new URL(url).searchParams.get("text") || "";
+    geoRequests.push(city);
+    const p = city.includes("Санкт-Петербург")
+      ? {lat:59.9386,lon:30.3141,timezone:{name:"Europe/Moscow"},formatted:"Санкт-Петербург, Россия"}
+      : {lat:55.7558,lon:37.6173,timezone:{name:"Europe/Moscow"},formatted:"Москва, Россия"};
+    return {ok:true,json:async()=>({results:[p]})};
+  };
+  get("compatTimeA").value = "08:45";
+  get("compatTimeB").value = "19:20";
+  get("compatPlaceA").value = "Москва, Россия";
+  get("compatPlaceB").value = "Санкт-Петербург, Россия";
+  await get("compatibilityForm").listeners.submit({preventDefault() {}});
+  assert.equal(get("compatNatalSection").hidden,false,"exact birth time and place should activate detailed natal compatibility");
+  assert.equal(get("compatNatalPlanetsA").children.length,8,"first natal chart shows Sun, Moon, Mercury, Venus, Mars, Jupiter, Saturn and Ascendant");
+  assert.equal(get("compatNatalPlanetsB").children.length,8,"second natal chart shows key placements");
+  assert.ok(get("compatSynastrySummary").textContent.length>30,"synastry summary renders");
+  assert.ok(get("compatSynastryAspects").children.length<=7,"only the strongest aspects are highlighted");
+  assert.equal(geoRequests.length,2,"only city names are sent to the geocoder, one query per participant");
+  assert.ok(geoRequests.every((city)=>city.includes("Россия")),"birth dates, times and names are not sent in geocoding queries");
+  assert.ok(dims.every((id)=>/^\d+\/100$/.test(get(id).textContent)),"advanced scores remain available for all dimensions");
+  console.log("PASS: ephemeris loads; forecast periods and alternate readings vary; basic compatibility is symmetric; detailed natal charts use birth time/place and render planetary positions, Ascendants and synastry aspects.");
 })().catch((error) => { console.error(error); process.exitCode = 1; });
