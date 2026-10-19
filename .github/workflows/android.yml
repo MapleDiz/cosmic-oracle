@@ -9,6 +9,7 @@ on:
       - 'style.css'
       - 'script.js'
       - 'assets/**'
+      - 'tests/**'
       - 'package.json'
       - 'capacitor.config.json'
       - '.github/workflows/android.yml'
