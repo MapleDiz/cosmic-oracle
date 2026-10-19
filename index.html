@@ -77,6 +77,7 @@
             <div class="forecast-tabs" role="tablist" aria-label="Период прогноза">
                 <button class="forecast-tab active" type="button" data-period="day" role="tab" aria-selected="true">На день</button>
                 <button class="forecast-tab" type="button" data-period="week" role="tab" aria-selected="false">На неделю</button>
+                <button class="forecast-tab" type="button" data-period="month" role="tab" aria-selected="false">На месяц</button>
                 <button class="forecast-tab" type="button" data-period="year" role="tab" aria-selected="false">На год</button>
             </div>
             <article class="forecast-card glass-card tilt-card" id="forecastCard">
@@ -87,13 +88,17 @@
                 <div class="forecast-meta"><div><small>ЭНЕРГИЯ</small><strong id="energyValue">Высокая</strong></div><div><small>СЧАСТЛИВОЕ ЧИСЛО</small><strong id="luckyNumber">7</strong></div><div><small>ЦВЕТ ДНЯ</small><strong id="luckyColor">Аметист</strong></div></div>
             </article>
             <div class="insight-grid"><article class="insight-card glass-card"><span class="insight-icon">✧</span><small>КЛЮЧЕВОЕ СЛОВО</small><strong id="keywordValue">Возможность</strong></article><article class="insight-card glass-card"><span class="insight-icon">☾</span><small>СОВЕТ ВСЕЛЕННОЙ</small><strong id="adviceValue">Доверься себе</strong></article></div>
-            <button type="button" class="secondary-button" id="newForecast">Обновить карту <span>↻</span></button>
+            <section class="domain-section" aria-label="Прогноз по сферам жизни"><h3>Сферы внимания</h3><div class="domain-grid"><article class="domain-card glass-card"><span>♡</span><small>ОТНОШЕНИЯ</small><p id="loveValue"></p></article><article class="domain-card glass-card"><span>✦</span><small>РАБОТА И ЦЕЛИ</small><p id="workValue"></p></article><article class="domain-card glass-card"><span>◈</span><small>ДЕНЬГИ И РЕСУРСЫ</small><p id="moneyValue"></p></article><article class="domain-card glass-card"><span>☾</span><small>ВНУТРЕННИЙ БАЛАНС</small><p id="wellbeingValue"></p></article></div></section>
+            <section class="transit-panel glass-card" aria-live="polite"><div class="transit-heading"><small>НЕБЕСНЫЙ ФОН</small><span id="transitDate"></span></div><p id="transitSummary"></p><div class="planet-chips" id="planetChips"></div><p class="calculation-note">Расчёт выполнен по дате рождения и солнечному знаку. Без точного времени и места рождения это не полная натальная карта.</p></section>
+            <p class="astro-disclaimer">Астрология — символическая интерпретация, а не научно подтверждённый способ предсказывать события. Используй прогноз как повод для размышления, а не как замену собственным решениям.</p>
+            <button type="button" class="secondary-button" id="newForecast">Другой вариант <span>↻</span></button>
         </section>
         <footer class="site-footer"><span>✦ COSMIC ORACLE</span><p>Звёзды подсказывают — выбор всегда за тобой.</p></footer>
     </main>
 
     <div class="scanner-overlay" id="scannerOverlay" aria-hidden="true"><div class="scanner-ring"><span>✦</span></div><p>СОЕДИНЕНИЕ СО ЗВЁЗДАМИ</p><div class="scanner-track"><span></span></div><small>Расшифровываем твою карту...</small></div>
     <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="assets/astronomy.browser.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
