@@ -353,6 +353,11 @@ function showResult() {
   $("resultName").textContent = profile.name;
   $("resultBirthInfo").textContent = displayBirthDate(profile.birthDate)+" · "+signsByKey[profile.zodiac].name;
   $("resultZodiacSymbol").textContent = signsByKey[profile.zodiac].symbol;
+  $("compatNameA").value = profile.name;
+  $("compatBirthA").value = profile.birthDate;
+  $("compatibilitySection").hidden = true;
+  $("openCompatibility").setAttribute("aria-expanded","false");
+  resetCompatibilityResult();
   render(active);
   window.scrollTo({top:0,behavior:"smooth"});
 }
@@ -374,6 +379,9 @@ function reset() {
   $("resultScreen").hidden = true;
   $("entryScreen").hidden = false;
   $("hero").hidden = false;
+  $("compatibilitySection").hidden = true;
+  $("openCompatibility").setAttribute("aria-expanded","false");
+  resetCompatibilityResult();
   document.querySelectorAll(".ad-slot").forEach((slot) => slot.hidden = false);
   window.scrollTo({top:0,behavior:"smooth"});
 }
