@@ -552,12 +552,157 @@ function compatibilityDescription(kind,score,signA,signB) {
   return text;
 }
 function genderLabel(value) { return value==="female"?"женщина":value==="male"?"мужчина":"участник"; }
+
+const geocodeCache = new Map();
+const natalBodies = ["Sun","Moon","Mercury","Venus","Mars","Jupiter","Saturn"];
+const natalBodyLabels = {Sun:"Солнце",Moon:"Луна",Mercury:"Меркурий",Venus:"Венера",Mars:"Марс",Jupiter:"Юпитер",Saturn:"Сатурн",Ascendant:"Асцендент"};
+const natalBodySymbols = {Sun:"☉",Moon:"☾",Mercury:"☿",Venus:"♀",Mars:"♂",Jupiter:"♃",Saturn:"♄",Ascendant:"ASC"};
+const synastryAspectTypes = [
+  {angle:0,name:"соединение",limit:7,quality:73},
+  {angle:60,name:"секстиль",limit:4.5,quality:83},
+  {angle:90,name:"квадрат",limit:5.5,quality:57},
+  {angle:120,name:"трин",limit:5.5,quality:89},
+  {angle:180,name:"оппозиция",limit:6.5,quality:59}
+];
+const domainSynastryPairs = {
+  love:[["Venus","Mars"],["Mars","Venus"],["Venus","Venus"],["Sun","Moon"],["Moon","Sun"],["Moon","Venus"],["Venus","Moon"],["Ascendant","Venus"],["Venus","Ascendant"]],
+  family:[["Moon","Moon"],["Moon","Saturn"],["Saturn","Moon"],["Sun","Moon"],["Moon","Sun"],["Ascendant","Moon"],["Moon","Ascendant"],["Sun","Saturn"],["Saturn","Sun"]],
+  work:[["Mercury","Mercury"],["Sun","Saturn"],["Saturn","Sun"],["Mars","Mars"],["Mercury","Saturn"],["Saturn","Mercury"],["Jupiter","Mercury"],["Mercury","Jupiter"]],
+  home:[["Moon","Moon"],["Moon","Venus"],["Venus","Moon"],["Saturn","Moon"],["Moon","Saturn"],["Ascendant","Moon"],["Moon","Ascendant"],["Ascendant","Ascendant"]]
+};
+function geocodeBirthplace(place) {
+  const apiKey = String(window.COSMIC_CONFIG && window.COSMIC_CONFIG.geoapifyApiKey || "").trim();
+  if (!apiKey) return Promise.reject(new Error("не настроен ключ Geoapify"));
+  const cacheKey = place.trim().toLocaleLowerCase("ru-RU");
+  if (geocodeCache.has(cacheKey)) return Promise.resolve(geocodeCache.get(cacheKey));
+  const url = "https://api.geoapify.com/v1/geocode/search?text="+encodeURIComponent(place.trim())+"&lang=ru&format=json&limit=1&apiKey="+encodeURIComponent(apiKey);
+  return fetch(url).then((response) => {
+    if (!response.ok) throw new Error("сервис координат вернул ошибку "+response.status);
+    return response.json();
+  }).then((data) => {
+    const result = data && data.results && data.results[0];
+    if (!result || !Number.isFinite(Number(result.lat)) || !Number.isFinite(Number(result.lon)) || !result.timezone || !result.timezone.name) {
+      throw new Error("город не найден или для него нет часового пояса; уточни город и страну");
+    }
+    const placeData = {lat:Number(result.lat),lon:Number(result.lon),timezone:result.timezone.name,label:result.formatted || place.trim()};
+    geocodeCache.set(cacheKey,placeData);
+    return placeData;
+  });
+}
+function localBirthToUtc(dateValue,timeValue,timeZone) {
+  const dateParts = dateValue.split("-").map(Number);
+  const timeParts = timeValue.split(":").map(Number);
+  const [year,month,day] = dateParts;
+  const [hour,minute] = timeParts;
+  if (!year || !month || !day || !Number.isFinite(hour) || !Number.isFinite(minute)) throw new Error("проверь дату и местное время рождения");
+  const targetWall = Date.UTC(year,month-1,day,hour,minute,0);
+  const formatter = new Intl.DateTimeFormat("en-GB",{timeZone,year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hourCycle:"h23"});
+  let candidate = targetWall;
+  for (let i=0;i<5;i++) {
+    const parts = formatter.formatToParts(new Date(candidate));
+    const values = {};
+    for (const part of parts) if (part.type!=="literal") values[part.type]=Number(part.value);
+    const displayedWall = Date.UTC(values.year,values.month-1,values.day,values.hour,values.minute,values.second);
+    const next = targetWall-(displayedWall-candidate);
+    if (next===candidate) break;
+    candidate = next;
+  }
+  const parts = formatter.formatToParts(new Date(candidate));
+  const values = {};
+  for (const part of parts) if (part.type!=="literal") values[part.type]=Number(part.value);
+  if (values.year!==year||values.month!==month||values.day!==day||values.hour!==hour||values.minute!==minute) {
+    throw new Error("это местное время неоднозначно или не существует из-за перехода на летнее/зимнее время; уточни время рождения");
+  }
+  return new Date(candidate);
+}
+function natalAscendant(dateUtc,latitude,longitude) {
+  const astronomy = window.Astronomy;
+  if (!astronomy || typeof astronomy.SiderealTime!=="function") throw new Error("не удалось вычислить звёздное время");
+  const theta = normAngle(astronomy.SiderealTime(dateUtc)*15+longitude)*Math.PI/180;
+  const phi = latitude*Math.PI/180;
+  const obliquity = 23.4392911*Math.PI/180;
+  return normAngle(Math.atan2(Math.cos(theta),Math.sin(obliquity)*Math.tan(phi)+Math.cos(obliquity)*Math.sin(theta))*180/Math.PI);
+}
+function calculateNatalChart(birthDateUtc,geo) {
+  const positions = {};
+  for (const body of natalBodies) {
+    const longitude = longitudeOf(body,birthDateUtc);
+    const sign = getSunSign(longitude);
+    positions[body] = {longitude,sign:sign.key,signName:sign.name,element:sign.element};
+  }
+  const ascLongitude = natalAscendant(birthDateUtc,geo.lat,geo.lon);
+  const ascSign = getSunSign(ascLongitude);
+  positions.Ascendant = {longitude:ascLongitude,sign:ascSign.key,signName:ascSign.name,element:ascSign.element};
+  return {positions,geo,birthDateUtc};
+}
+function natalAspect(bodyA,bodyB) {
+  const diff = Math.abs(signedAngle(bodyA.longitude-bodyB.longitude));
+  let best = null;
+  for (const aspect of synastryAspectTypes) {
+    const orb = Math.abs(diff-aspect.angle);
+    if (orb<=aspect.limit && (!best || orb<best.orb)) best = {...aspect,orb};
+  }
+  return best;
+}
+function buildSynastry(chartA,chartB) {
+  const aspects = [];
+  const bodies = [...natalBodies,"Ascendant"];
+  for (const bodyA of bodies) for (const bodyB of bodies) {
+    const aspect = natalAspect(chartA.positions[bodyA],chartB.positions[bodyB]);
+    if (aspect) {
+      const relevance = ["Moon","Venus","Mars","Ascendant"].includes(bodyA) || ["Moon","Venus","Mars","Ascendant"].includes(bodyB) ? 1.25 : 1;
+      const exactness = 1.12-(aspect.orb/aspect.limit)*0.12;
+      aspects.push({bodyA,bodyB,...aspect,weight:relevance*exactness});
+    }
+  }
+  aspects.sort((a,b)=>a.orb-b.orb);
+  return aspects;
+}
+function aspectsForDomain(aspects,domain) {
+  const pairs = domainSynastryPairs[domain] || [];
+  return aspects.filter((aspect)=>pairs.some(([a,b])=>a===aspect.bodyA&&b===aspect.bodyB));
+}
+function domainAspectScore(aspects,domain) {
+  const relevant = aspectsForDomain(aspects,domain);
+  if (!relevant.length) return 70;
+  let weighted = 0, weights = 0;
+  for (const aspect of relevant) { weighted += aspect.quality*aspect.weight; weights += aspect.weight; }
+  return Math.round(weighted/weights);
+}
+function makePlanetChip(body,position) {
+  const chip = document.createElement("span");
+  chip.className = "planet-chip";
+  chip.textContent = natalBodySymbols[body]+" "+natalBodyLabels[body]+" · "+position.signName;
+  return chip;
+}
+function geoLabel(geo) { return geo.label+" · "+geo.timezone; }
+function renderNatalCard(name,geo,chart,nameId,containerId) {
+  $(nameId).textContent = name+" · "+geo;
+  const order = [...natalBodies,"Ascendant"];
+  $(containerId).replaceChildren(...order.map((body)=>makePlanetChip(body,chart.positions[body])));
+}
+function formatSynastryAspect(aspect,nameA,nameB) {
+  return natalBodyLabels[aspect.bodyA]+" "+nameA+" — "+aspect.name+" — "+natalBodyLabels[aspect.bodyB]+" "+nameB+" (орб "+aspect.orb.toFixed(1)+"°)";
+}
+function appendSynastryContext(baseText,aspects,domain,nameA,nameB) {
+  const relevant = aspectsForDomain(aspects,domain).slice(0,2);
+  if (!relevant.length) return baseText+" В пределах принятых орбисов близких мажорных аспектов по ключевым показателям этой сферы не найдено; это не означает отсутствия совместимости.";
+  return baseText+" В символической синастрии заметны: "+relevant.map((aspect)=>formatSynastryAspect(aspect,nameA,nameB)).join("; ")+". Рассматривай это как тему для размышления, а не гарантию поведения.";
+}
+
 function renderCompatibility(event) {
   if (event) event.preventDefault();
   const nameA = $("compatNameA").value.trim();
   const nameB = $("compatNameB").value.trim();
   const birthA = $("compatBirthA").value;
   const birthB = $("compatBirthB").value;
+  const timeA = $("compatTimeA").value;
+  const timeB = $("compatTimeB").value;
+  const placeA = $("compatPlaceA").value.trim();
+  const placeB = $("compatPlaceB").value.trim();
+  const advancedValues = [timeA,timeB,placeA,placeB];
+  const advancedCount = advancedValues.filter(Boolean).length;
+  if (advancedCount!==0 && advancedCount!==4) { toast("Для расширенной карты укажи время и город рождения у обоих людей либо очисти все эти поля для базового расчёта."); return; }
   if (!nameA || !nameB) { toast("Укажи оба имени."); return; }
   if (!birthA || !birthB) { toast("Укажи обе даты рождения для сравнения знаков зодиака."); return; }
   const today = new Date(); today.setHours(23,59,59,999);
@@ -569,13 +714,34 @@ function renderCompatibility(event) {
   const numberB = nameNumber(nameB);
   const nameScore = nameCompatibilityScore(numberA,numberB);
   const zodiacScore = zodiacCompatibilityScore(signA,signB);
-  const overall = Math.round(zodiacScore*.58+nameScore*.42);
+  let overall = Math.round(zodiacScore*.58+nameScore*.42);
   const bases = domainBaseScores(signA.element,signB.element);
-  const love = clamp(Math.round(bases.love*.62+zodiacScore*.23+nameScore*.15),52,95);
-  const family = clamp(Math.round(bases.family*.62+zodiacScore*.25+nameScore*.13),52,95);
-  const work = clamp(Math.round(bases.work*.62+zodiacScore*.25+nameScore*.13),52,95);
-  const home = clamp(Math.round(bases.home*.62+zodiacScore*.25+nameScore*.13),52,95);
+  let love = clamp(Math.round(bases.love*.62+zodiacScore*.23+nameScore*.15),52,95);
+  let family = clamp(Math.round(bases.family*.62+zodiacScore*.25+nameScore*.13),52,95);
+  let work = clamp(Math.round(bases.work*.62+zodiacScore*.25+nameScore*.13),52,95);
+  let home = clamp(Math.round(bases.home*.62+zodiacScore*.25+nameScore*.13),52,95);
   const style = elementalStyle(signA.element,signB.element);
+  let chartA = null, chartB = null, synastryAspects = [], extendedMode = false;
+  $("compatNatalSection").hidden = true;
+  if (advancedCount===4) {
+    try {
+      const [geoA,geoB] = await Promise.all([geocodeBirthplace(placeA),geocodeBirthplace(placeB)]);
+      const dateA = localBirthToUtc(birthA,timeA,geoA.timezone);
+      const dateB = localBirthToUtc(birthB,timeB,geoB.timezone);
+      chartA = calculateNatalChart(dateA,geoA);
+      chartB = calculateNatalChart(dateB,geoB);
+      synastryAspects = buildSynastry(chartA,chartB);
+      love = clamp(Math.round(love*.42+domainAspectScore(synastryAspects,"love")*.58),45,98);
+      family = clamp(Math.round(family*.42+domainAspectScore(synastryAspects,"family")*.58),45,98);
+      work = clamp(Math.round(work*.42+domainAspectScore(synastryAspects,"work")*.58),45,98);
+      home = clamp(Math.round(home*.42+domainAspectScore(synastryAspects,"home")*.58),45,98);
+      overall = Math.round((nameScore+zodiacScore+love+family+work+home)/6);
+      extendedMode = true;
+    } catch (error) {
+      const errorText = error && error.message ? error.message : "не удалось построить натальные карты";
+      toast("Показан базовый разбор: "+errorText+". Проверь ключ и данные рождения.");
+    }
+  }
 
   $("compatOverallScore").textContent = overall+"/100";
   $("compatSignPair").textContent = nameA+" ("+genderLabel($("compatGenderA").value)+") · "+signA.symbol+" "+signA.name+"  +  "+nameB+" ("+genderLabel($("compatGenderB").value)+") · "+signB.symbol+" "+signB.name;
@@ -601,7 +767,29 @@ function renderCompatibility(event) {
     : "Следите за тем, чтобы похожие привычки не превращались в упрямство, а разные — в ожидание, что партнёр должен догадаться сам. Договорённости лучше произносить вслух.";
   $("compatContributionA").textContent = nameA+": число имени "+numberA+" связывают с темой "+nameNumberMeaning[numberA]+". В паре это можно выразить через конкретные поступки и открытый разговор.";
   $("compatContributionB").textContent = nameB+": число имени "+numberB+" связывают с темой "+nameNumberMeaning[numberB]+". Сильная сторона лучше проявляется, когда второй человек её замечает и уважает.";
-  $("compatMethodNote").textContent = "Как рассчитано: значения букв кириллического имени транслитерируются в латиницу и суммируются по циклу Пифагора 1–9; солнечные знаки сравниваются по традиционной схеме стихий и расстоянию между знаками. Баллы — условный игровой индекс, не вероятность удачи или расставания. Пол человека не меняет оценку. Чтобы сравнить, кто из нескольких возможных партнёров подходит по этой символической схеме больше, нажми «Сравнить другую пару» и введи другого человека. Реальная совместимость зависит от общения, безопасности, уважения, общих ценностей и поведения.";
+  if (extendedMode) {
+    $("compatNatalSection").hidden = false;
+    renderNatalCard(nameA,geoLabel(chartA.geo),chartA,"compatNatalNameA","compatNatalPlanetsA");
+    renderNatalCard(nameB,geoLabel(chartB.geo),chartB,"compatNatalNameB","compatNatalPlanetsB");
+    const strongest = synastryAspects.slice(0,7);
+    $("compatSynastrySummary").textContent = strongest.length
+      ? "В выбранных орбисах найдено "+synastryAspects.length+" взаимных мажорных аспектов. Ни один из них не гарантирует конкретное поведение: важны контекст, зрелость и реальные договорённости."
+      : "По выбранным орбисам близких мажорных аспектов между основными показателями карт не найдено. Это не означает, что люди не подходят друг другу.";
+    $("compatSynastryAspects").replaceChildren(...strongest.map((aspect)=>{
+      const chip=document.createElement("span");
+      chip.className="planet-chip";
+      chip.textContent=formatSynastryAspect(aspect,nameA,nameB);
+      return chip;
+    }));
+    $("compatLoveText").textContent = appendSynastryContext($("compatLoveText").textContent,synastryAspects,"love",nameA,nameB);
+    $("compatFamilyText").textContent = appendSynastryContext($("compatFamilyText").textContent,synastryAspects,"family",nameA,nameB);
+    $("compatWorkText").textContent = appendSynastryContext($("compatWorkText").textContent,synastryAspects,"work",nameA,nameB);
+    $("compatHomeText").textContent = appendSynastryContext($("compatHomeText").textContent,synastryAspects,"home",nameA,nameB);
+    $("compatOverview").textContent += " Дополнительно учтены положения Солнца, Луны, Меркурия, Венеры, Марса, Юпитера, Сатурна и Асцендента обоих людей.";
+    $("compatMethodNote").textContent = "Расширенный расчёт: геокодер определил координаты и часовой пояс каждого города; местное время преобразовано в UTC с учётом правил временной зоны, затем рассчитаны ключевые планетарные долготы и Асцендент. Синастрические аспекты интерпретируются в рамках западной тропической астрологии. Баллы — условная развлекательная шкала, не научная оценка и не вероятность успеха отношений.";
+  } else {
+    $("compatMethodNote").textContent = "Базовый расчёт: значения букв имени сопоставляются по условной нумерологической схеме, а солнечные знаки — по традиционной схеме стихий и расстоянию между знаками. Чтобы включить расширенную синастрию, заполни время и город рождения у обоих людей и настрой ключ Geoapify в assets/config.js. Баллы не измеряют реальную совместимость; важны общение, безопасность, уважение, общие ценности и поведение.";
+  }
   $("compatibilityResult").hidden = false;
 }
 function elementANameFallback(element) {
