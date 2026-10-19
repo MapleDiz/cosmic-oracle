@@ -410,6 +410,210 @@ function setupTilt() {
     card.addEventListener("pointerleave",()=>{card.style.transform="";});
   });
 }
+
+const nameTranslit = {
+  "а":"a","б":"b","в":"v","г":"g","д":"d","е":"e","ё":"e","ж":"zh","з":"z","и":"i","й":"y",
+  "к":"k","л":"l","м":"m","н":"n","о":"o","п":"p","р":"r","с":"s","т":"t","у":"u","ф":"f",
+  "х":"h","ц":"ts","ч":"ch","ш":"sh","щ":"shch","ъ":"","ы":"y","ь":"","э":"e","ю":"yu","я":"ya"
+};
+const nameNumberMeaning = {
+  1:"инициатива, самостоятельность и умение задавать направление",
+  2:"партнёрство, тактичность и внимание к чувствам другого",
+  3:"лёгкость общения, юмор и творческая энергия",
+  4:"надёжность, порядок и практичные решения",
+  5:"свобода, гибкость и тяга к новому",
+  6:"забота, ответственность и стремление к гармонии",
+  7:"глубина, наблюдательность и потребность в личном пространстве",
+  8:"организация, амбиции и умение обращаться с ресурсами",
+  9:"сочувствие, широкий взгляд и готовность поддерживать"
+};
+const elementShort = {
+  "Огонь":"энергии, инициативе и прямоте",
+  "Земля":"стабильности, практике и надёжности",
+  "Воздух":"общении, идеях и интеллектуальной свободе",
+  "Вода":"чувствах, эмпатии и эмоциональной глубине"
+};
+const modalities = {
+  aries:"кардинальный",cancer:"кардинальный",libra:"кардинальный",capricorn:"кардинальный",
+  taurus:"фиксированный",leo:"фиксированный",scorpio:"фиксированный",aquarius:"фиксированный",
+  gemini:"мутабельный",virgo:"мутабельный",sagittarius:"мутабельный",pisces:"мутабельный"
+};
+function clamp(value,min,max) { return Math.max(min,Math.min(max,value)); }
+function nameNumber(name) {
+  let total = 0;
+  let count = 0;
+  for (const char of String(name || "").toLocaleLowerCase("ru-RU")) {
+    let latin = nameTranslit[char];
+    if (latin === undefined && /^[a-z]$/i.test(char)) latin = char;
+    if (!latin) continue;
+    for (const letter of latin) {
+      if (!/^[a-z]$/i.test(letter)) continue;
+      total += ((letter.toLowerCase().charCodeAt(0)-97)%9)+1;
+      count++;
+    }
+  }
+  if (!count) return 1;
+  while (total > 9) total = String(total).split("").reduce((sum,digit)=>sum+Number(digit),0);
+  return total;
+}
+function nameCompatibilityScore(numberA,numberB) {
+  const gap = Math.abs(numberA-numberB);
+  const circleGap = Math.min(gap,9-gap);
+  return clamp(88-circleGap*5+(numberA===numberB?2:0),50,90);
+}
+function zodiacCompatibilityScore(signA,signB) {
+  const gap = Math.abs(signIndex(signA.key)-signIndex(signB.key));
+  const distance = Math.min(gap,12-gap);
+  const traditionalScores = {0:76,1:67,2:80,3:59,4:88,5:70,6:74};
+  let score = traditionalScores[distance] || 67;
+  if (signA.element === signB.element) score = Math.max(score,84);
+  const complementary = (signA.element==="Огонь"&&signB.element==="Воздух") ||
+    (signA.element==="Воздух"&&signB.element==="Огонь") ||
+    (signA.element==="Земля"&&signB.element==="Вода") ||
+    (signA.element==="Вода"&&signB.element==="Земля");
+  if (complementary) score = Math.max(score,81);
+  if (modalities[signA.key] === modalities[signB.key] && distance !== 0 && distance !== 4) score -= 3;
+  return clamp(score,55,90);
+}
+function elementsPair(elementA,elementB,one,two) {
+  return (elementA===one&&elementB===two)||(elementA===two&&elementB===one);
+}
+function elementalStyle(elementA,elementB) {
+  if (elementA===elementB) return "same";
+  if (elementsPair(elementA,elementB,"Огонь","Воздух") || elementsPair(elementA,elementB,"Земля","Вода")) return "complementary";
+  if (elementsPair(elementA,elementB,"Огонь","Вода") || elementsPair(elementA,elementB,"Земля","Воздух")) return "friction";
+  return "mixed";
+}
+function domainBaseScores(elementA,elementB) {
+  const style = elementalStyle(elementA,elementB);
+  const sameFire = elementA===elementB&&elementA==="Огонь";
+  const sameEarth = elementA===elementB&&elementA==="Земля";
+  const sameAir = elementA===elementB&&elementA==="Воздух";
+  const sameWater = elementA===elementB&&elementA==="Вода";
+  const earthWater = elementsPair(elementA,elementB,"Земля","Вода");
+  const fireAir = elementsPair(elementA,elementB,"Огонь","Воздух");
+  const earthAir = elementsPair(elementA,elementB,"Земля","Воздух");
+  const fireWater = elementsPair(elementA,elementB,"Огонь","Вода");
+  const fireEarth = elementsPair(elementA,elementB,"Огонь","Земля");
+  const airWater = elementsPair(elementA,elementB,"Воздух","Вода");
+  return {
+    love: sameEarth||sameWater?82:sameFire?77:sameAir?75:fireAir?86:earthWater?83:fireWater?65:earthAir?67:fireEarth?72:airWater?69:74,
+    family: sameEarth?88:earthWater?88:sameWater?82:sameFire?72:sameAir?70:fireAir?73:fireWater?67:earthAir?68:fireEarth?77:airWater?70:style==="same"?78:75,
+    work: sameEarth?83:sameAir?81:sameFire?77:sameWater?72:fireAir?86:earthWater?73:earthAir?80:fireEarth?78:fireWater?70:airWater?74:75,
+    home: sameEarth?89:earthWater?87:sameWater?81:sameFire?70:sameAir?66:fireAir?68:earthAir?67:fireWater?65:fireEarth?78:airWater?72:75
+  };
+}
+function compatibilityDescription(kind,score,signA,signB) {
+  const elementA = signA.element, elementB = signB.element;
+  const style = elementalStyle(elementA,elementB);
+  const elementAName = elementShort[elementA], elementBName = elementShort[elementB];
+  const starts = {
+    love: {
+      same:"Похожий эмоциональный ритм может облегчать сближение, но важно не считать желания другого само собой разумеющимися.",
+      complementary:"Разные сильные стороны могут дополнять друг друга: одному легче зажечь идею, другому — придать ей устойчивость.",
+      friction:"Способ проявлять чувства может отличаться: проясняйте ожидания словами, а не проверками и догадками.",
+      mixed:"Притяжение может строиться на различиях. Лучше заранее обсуждать темп сближения, внимание и личные границы."
+    },
+    family: {
+      same:"Похожие представления о семейных привычках упрощают договорённости; обсудите, где каждому нужна самостоятельность.",
+      complementary:"Союз может соединить заботу и практичность. Полезно заранее договориться о целях семьи и распределении ответственности.",
+      friction:"Домашние ожидания могут различаться. Проговорите роли, деньги, обязанности и личное пространство, не полагаясь на догадки.",
+      mixed:"Семейная устойчивость будет зависеть от ясных общих правил и готовности пересматривать их вместе."
+    },
+    work: {
+      same:"Похожий стиль действий облегчает совместную работу, хотя одинаковые слабые места могут усиливаться. Разделите роли.",
+      complementary:"Разные подходы могут дать сильную команду: один замечает возможности, другой помогает выстроить порядок.",
+      friction:"Темп и способ принимать решения могут различаться. Зафиксируйте сроки, ответственность и критерии готового результата.",
+      mixed:"Совместная работа будет продуктивнее, если заранее распределить задачи с учётом сильных сторон каждого."
+    },
+    home: {
+      same:"Схожий бытовой ритм помогает договориться, но даже при похожих привычках обязанности лучше не оставлять подразумеваемыми.",
+      complementary:"Различия могут дополняться, когда один поддерживает уют, а другой структурирует повседневные дела. Обсудите справедливое распределение.",
+      friction:"Взгляды на порядок, спонтанность и расходы могут не совпадать. Договоритесь о минимальных правилах, которые комфортны обоим.",
+      mixed:"Быт легче устроить, если обсудить стандарты чистоты, бюджет, тишину, гостей и время на себя."
+    }
+  };
+  let text = starts[kind][style] || starts[kind].mixed;
+  if (score >= 83) text += " В символической схеме эта сфера выглядит сильной опорой пары.";
+  else if (score >= 72) text += " Потенциал есть, а регулярный диалог поможет превратить его в понятные привычки.";
+  else text += " Здесь особенно полезно не ждать совпадения взглядов автоматически, а договариваться заранее.";
+  if (kind === "love") text += " Тёплое общение, согласие и уважение границ важнее любого балла.";
+  if (kind === "family") text += " Практический ориентир — честно обсуждать нагрузку, семейные планы и бюджет.";
+  if (kind === "work") text += " Поставьте общую цель и назначьте ответственных за конкретные шаги.";
+  if (kind === "home") text += " Начните с простого: кто и что делает, как принимаются общие решения и как каждый отдыхает.";
+  return text;
+}
+function genderLabel(value) { return value==="female"?"женщина":value==="male"?"мужчина":"участник"; }
+function renderCompatibility(event) {
+  if (event) event.preventDefault();
+  const nameA = $("compatNameA").value.trim();
+  const nameB = $("compatNameB").value.trim();
+  const birthA = $("compatBirthA").value;
+  const birthB = $("compatBirthB").value;
+  if (!nameA || !nameB) { toast("Укажи оба имени."); return; }
+  if (!birthA || !birthB) { toast("Укажи обе даты рождения для сравнения знаков зодиака."); return; }
+  const today = new Date(); today.setHours(23,59,59,999);
+  if (new Date(birthA+"T12:00:00")>today || new Date(birthB+"T12:00:00")>today) { toast("Дата рождения не может быть в будущем."); return; }
+
+  const signA = signsByKey[zodiacFromDate(birthA)];
+  const signB = signsByKey[zodiacFromDate(birthB)];
+  const numberA = nameNumber(nameA);
+  const numberB = nameNumber(nameB);
+  const nameScore = nameCompatibilityScore(numberA,numberB);
+  const zodiacScore = zodiacCompatibilityScore(signA,signB);
+  const overall = Math.round(zodiacScore*.58+nameScore*.42);
+  const bases = domainBaseScores(signA.element,signB.element);
+  const love = clamp(Math.round(bases.love*.62+zodiacScore*.23+nameScore*.15),52,95);
+  const family = clamp(Math.round(bases.family*.62+zodiacScore*.25+nameScore*.13),52,95);
+  const work = clamp(Math.round(bases.work*.62+zodiacScore*.25+nameScore*.13),52,95);
+  const home = clamp(Math.round(bases.home*.62+zodiacScore*.25+nameScore*.13),52,95);
+  const style = elementalStyle(signA.element,signB.element);
+
+  $("compatOverallScore").textContent = overall+"/100";
+  $("compatSignPair").textContent = nameA+" · "+signA.symbol+" "+signA.name+"  +  "+nameB+" · "+signB.symbol+" "+signB.name;
+  $("compatTitle").textContent = overall>=83?"Много точек соприкосновения":overall>=72?"Есть потенциал для гармоничного союза":"Союзу особенно помогут договорённости";
+  $("compatOverview").textContent = "Символический индекс пары "+nameA+" и "+nameB+" — "+overall+" из 100. Сочетание стихий — "+signA.element.toLocaleLowerCase("ru-RU")+" и "+signB.element.toLocaleLowerCase("ru-RU")+". Это не рейтинг людей и не ответ, кому следует быть вместе: результат показывает темы, которые можно обсудить и сравнить с реальной жизнью.";
+  $("compatNamesScore").textContent = nameScore+"/100";
+  $("compatZodiacScore").textContent = zodiacScore+"/100";
+  $("compatLoveScore").textContent = love+"/100";
+  $("compatFamilyScore").textContent = family+"/100";
+  $("compatWorkScore").textContent = work+"/100";
+  $("compatHomeScore").textContent = home+"/100";
+  $("compatNamesText").textContent = "В символической нумерологии имя "+nameA+" даёт число "+numberA+" ("+nameNumberMeaning[numberA]+"), а имя "+nameB+" — число "+numberB+" ("+nameNumberMeaning[numberB]+").";
+  $("compatZodiacText").textContent = signA.name+" относится к стихии "+signA.element.toLocaleLowerCase("ru-RU")+", "+signB.name+" — к стихии "+signB.element.toLocaleLowerCase("ru-RU")+". В традиционной схеме учитываются сходство стихий и угловое расстояние знаков; это общая оценка только по солнечным знакам.";
+  $("compatLoveText").textContent = compatibilityDescription("love",love,signA,signB);
+  $("compatFamilyText").textContent = compatibilityDescription("family",family,signA,signB);
+  $("compatWorkText").textContent = compatibilityDescription("work",work,signA,signB);
+  $("compatHomeText").textContent = compatibilityDescription("home",home,signA,signB);
+  $("compatStrengths").textContent = style==="same"
+    ? "Оба символически выражают близкий стиль через "+elementANameFallback(signA.element)+". Это может давать чувство узнавания и схожий ритм."
+    : "Первый человек символически приносит "+elementShort[signA.element]+", второй — "+elementShort[signB.element]+". Разницу можно использовать как дополнение, а не как повод соревноваться.";
+  $("compatChallenges").textContent = style==="friction"
+    ? "Стихии в этой схеме описывают разные способы действовать и принимать решения. Уточняйте смысл слов, темп, ожидания и личные границы до того, как накопится раздражение."
+    : "Следите за тем, чтобы похожие привычки не превращались в упрямство, а разные — в ожидание, что партнёр должен догадаться сам. Договорённости лучше произносить вслух.";
+  $("compatContributionA").textContent = nameA+": число имени "+numberA+" связывают с темой "+nameNumberMeaning[numberA]+". В паре это можно выразить через конкретные поступки и открытый разговор.";
+  $("compatContributionB").textContent = nameB+": число имени "+numberB+" связывают с темой "+nameNumberMeaning[numberB]+". Сильная сторона лучше проявляется, когда второй человек её замечает и уважает.";
+  $("compatMethodNote").textContent = "Как рассчитано: значения букв кириллического имени транслитерируются в латиницу и суммируются по циклу Пифагора 1–9; солнечные знаки сравниваются по традиционной схеме стихий и расстоянию между знаками. Баллы — условный игровой индекс, не вероятность удачи или расставания. Пол человека не меняет оценку. Реальная совместимость зависит от общения, безопасности, уважения, общих ценностей и поведения.";
+  $("compatibilityResult").hidden = false;
+}
+function elementANameFallback(element) {
+  const names = {"Огонь":"энергию и прямоту","Земля":"практичность и надёжность","Воздух":"идеи и общение","Вода":"чуткость и эмоциональную глубину"};
+  return names[element] || "свои качества";
+}
+function openCompatibility() {
+  const section = $("compatibilitySection");
+  const next = section.hidden;
+  section.hidden = !next;
+  $("openCompatibility").setAttribute("aria-expanded",String(next));
+  if (next && profile) {
+    if (!$("compatNameA").value) $("compatNameA").value = profile.name;
+    if (!$("compatBirthA").value) $("compatBirthA").value = profile.birthDate;
+    if (!$("compatNameB").value) $("compatNameB").focus();
+    if (section.scrollIntoView) section.scrollIntoView({behavior:"smooth",block:"start"});
+  }
+}
+function resetCompatibilityResult() { $("compatibilityResult").hidden = true; }
+
 function init() {
   document.querySelectorAll(".zodiac-option").forEach((button)=>button.addEventListener("click",()=>chooseSign(button.dataset.zodiac)));
   $("birthDate").max = new Date().toISOString().slice(0,10);
@@ -418,6 +622,11 @@ function init() {
   document.querySelectorAll(".forecast-tab").forEach((button)=>button.addEventListener("click",()=>render(button.dataset.period)));
   $("editProfile").addEventListener("click",()=>{reset();if(profile){$("userName").value=profile.name;$("birthDate").value=profile.birthDate;chooseSign(profile.zodiac);}});
   $("newForecast").addEventListener("click",()=>{variations[active]=(variations[active]+1)%97;render(active);});
+  $("openCompatibility").addEventListener("click",openCompatibility);
+  $("compatibilityForm").addEventListener("submit",renderCompatibility);
+  $("compareAnother").addEventListener("click",()=>{resetCompatibilityResult();$("compatNameB").value="";$("compatBirthB").value="";$("compatGenderB").value="unspecified";$("compatNameB").focus();});
+  $("compatBirthA").max=new Date().toISOString().slice(0,10);
+  $("compatBirthB").max=new Date().toISOString().slice(0,10);
   setupParallax(); setupTilt();
   try {
     const saved = JSON.parse(localStorage.getItem("cosmicOracleProfile")||"null");
